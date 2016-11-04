@@ -3,9 +3,11 @@ package com.fuicuiedu.idedemo.interview_explain;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -23,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private MyAdapter myAdapter;
     private List<String> list;
     private Handler handler;
+
+    private int visiblelastIndex;//可见的最后一个item下标
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +49,42 @@ public class MainActivity extends AppCompatActivity {
         myAdapter = new MyAdapter(this,list);
 
         //加上listvewi的底部View，注意要放在setadapter之前
-        addMoreView(listView);
+//        addMoreView(listView);
 
         listView.setAdapter(myAdapter);
 
+        //监听用户滑动状态，是否滑动到listview底部
+        listView.setOnScrollListener(onScrollListerner);
+
     }
+
+
+    //滑动状态监听
+    private AbsListView.OnScrollListener onScrollListerner = new AbsListView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
+            //实际最后一条item下标
+            int lastIndex = myAdapter.getCount() -1;
+            //判断当滑动静止时，可见最后一个item是否是实际上最后一个item（下标）
+            if (scrollState == SCROLL_STATE_IDLE &&
+                    visiblelastIndex == lastIndex){
+                loadMoreDate();
+                myAdapter.notifyDataSetChanged();
+            }
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            //可见的最后一个item索引（下标）
+            visiblelastIndex = firstVisibleItem + visibleItemCount -1;
+
+            Log.e("=================== ","========================");
+            Log.e("firstVisibleItem = ",firstVisibleItem+"");
+            Log.e("visibleItemCount = ",visibleItemCount+"");
+            Log.e("totalItemCount = ",totalItemCount+"");
+            Log.e("=================== ","========================");
+        }
+    };
 
     //加上listview的底部View，注意要放在setadapter之前
     private void addMoreView(ListView listView){
@@ -61,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
 
         final Button moreBtn = (Button) view.findViewById(R.id.view_more_btn);
         final ProgressBar morePb = (ProgressBar) view.findViewById(R.id.view_more_pb);
-
         //加载更多
         moreBtn.setOnClickListener(new View.OnClickListener() {
             @Override
